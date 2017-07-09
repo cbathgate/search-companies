@@ -2,13 +2,24 @@
 
   const baseEndpoint = 'http://localhost:3000/api/companies';
   
-  function constructUrl() {
-    // TODO: create url endpoint with keys here
+  // mvp: use only the q paremeter
+  // stretch goal: only load 10 results at a time, scroll to load more options
+  // stretch goal: filter by labor
+  function constructUrl(q) {
+    return baseEndpoint + "?q=" + q;
   }
 
   function getData() {
-    // TODO: api call here
-    console.log("This is the value from search input", this.value);
+    if (this.value === '' || this.value === ' ') {
+      clearResults();
+    } else {
+      let url = constructUrl(this.value);
+      fetch(url)
+      .then(result => result.json())
+      .then((data) => {
+        makeResults(data.results);
+      });
+    }
   }
 
   function debounce(func, wait, immediate) {
@@ -26,17 +37,19 @@
     };
   };
 
-  function addResults() {
-    // TODO: function to add li nodes of company names to DOM
+  function makeResults(names) {
+    const html = names.map((name) => {
+      return `<li>${name.name}</li>`
+    }).join('');
+    results.innerHTML = html;
   }
 
   function clearResults() {
-    // TODO: removes li nodes if input value is empty
+    results.innerHTML = '';
   }
 
-  // 
   const searchInput = document.querySelector('.search');
-  const suggestions = document.querySelector('.results');
+  const results = document.querySelector('.results');
 
   // add event listeners
   searchInput.addEventListener('change', debounce(getData, 1000));

@@ -18,3 +18,28 @@ input.search {
   border: 1px grey solid;
   padding: 5px 0;
 }
+
+.results li {
+  width: 150%;
+  left: -30%;
+  position: relative;
+  list-style: none;
+  border-bottom: 1px grey solid;
+  margin: 0;
+  font-size: 24px;
+  padding: 10px 5px;
+  background-color: white;
+
+  -webkit-transition: background-color 0.5s ease-out;
+  -moz-transition: background-color 0.5s ease-out;
+  -o-transition: background-color 0.5s ease-out;
+  transition: background-color 0.5s ease-out;
+}
+
+.results li:first-child {
+  border-top: 1px grey solid;
+}
+
+.results li:hover {
+  background-color: #F1C232;
+}
