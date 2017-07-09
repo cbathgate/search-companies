@@ -5,14 +5,21 @@
   let currentLimit = 20;
   let resultsOnScreen = false;
   let scrolling = false;
-  let currentQuery = '';
+  let currentQuery = null;
   let total = 0;
+  let laborPreference = new Set();
   
-  // mvp: use only the q paremeter
-  // stretch goal: only load 10 results at a time, scroll to load more options
   // stretch goal: filter by labor
   function constructUrl() {
-    return `${baseEndpoint}?q=${currentQuery}&start=${currentStart}&limit=${currentLimit}`
+    if (laborPreference.size) {
+      let labor=([...laborPreference]).join(',');
+      return `${baseEndpoint}?q=${currentQuery}&start=${currentStart}&limit=${currentLimit}&laborTypes=${labor}`;
+    }
+    return `${baseEndpoint}?q=${currentQuery}&start=${currentStart}&limit=${currentLimit}`;
+  }
+
+  function clearQuery() {
+    currentQuery = null;
   }
 
   function setQuery() {
@@ -20,6 +27,7 @@
       clearResults();
     } else {
       if (currentQuery !== this.value) {
+        clearQuery();
         clearResults();
         currentQuery = this.value;
         getData();
@@ -28,7 +36,6 @@
   }
 
   function getData() {
-    console.log('hi');
     let url = constructUrl();
     fetch(url)
     .then(result => result.json())
@@ -36,6 +43,31 @@
       total = data.total;
       makeResults(data.results);
     });
+  }
+
+  function changeLaborPreference() {
+    if (this.checked) {  
+      laborPreference.add(this.value);
+    } else {
+      laborPreference.delete(this.value);
+    }
+    console.log(laborPreference);
+    laborPreference.size ? noneBox.checked = false: noneBox.checked = true;
+    clearResults();
+    if (currentQuery !== null) {
+      getData();
+    }
+  }
+
+  function unCheckOtherBoxes() {
+    checkBoxes.forEach((check) => {
+      check.checked = false;
+    })
+    laborPreference = new Set();
+    clearResults();
+    if (currentQuery !== null) {
+      getData();
+    }
   }
 
   function debounce(func, wait, immediate) {
@@ -149,7 +181,6 @@
   function clearResults() {
     results.innerHTML = '';
     resultsOnScreen = false;
-    currentQuery = '';
     currentStart = 0;
     currentLimit = 20;
     scrolling = false;
@@ -167,10 +198,18 @@
   const searchInput = document.querySelector('.search');
   const results = document.querySelector('.results');
   const modal = document.querySelector('.modal');
+  const checkBoxes = document.querySelectorAll('.check');
+  const noneBox = document.querySelector('.none');
 
   // add event listeners
   searchInput.addEventListener('change', debounce(setQuery, 1000));
   searchInput.addEventListener('keyup', debounce(setQuery, 1000));
+  noneBox.addEventListener('change', unCheckOtherBoxes);
+
+  checkBoxes.forEach((check) => {
+    check.addEventListener('change', changeLaborPreference);
+  });
+
   document.addEventListener('scroll', debounce(function() {
     if (reachedBottom() && resultsOnScreen) {
       currentStart = Math.min(currentStart + (total - currentStart), currentStart + currentLimit) ;
@@ -179,4 +218,6 @@
       getData();
     }
   }, 1000));
+
+
 })()
