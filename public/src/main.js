@@ -1,25 +1,41 @@
 (function() {
 
   const baseEndpoint = 'http://localhost:3000/api/companies';
+  let currentStart = 0;
+  let currentLimit = 20;
+  let resultsOnScreen = false;
+  let scrolling = false;
+  let currentQuery = '';
+  let total = 0;
   
   // mvp: use only the q paremeter
   // stretch goal: only load 10 results at a time, scroll to load more options
   // stretch goal: filter by labor
-  function constructUrl(q) {
-    return baseEndpoint + "?q=" + q;
+  function constructUrl() {
+    return `${baseEndpoint}?q=${currentQuery}&start=${currentStart}&limit=${currentLimit}`
   }
 
-  function getData() {
+  function setQuery() {
     if (this.value === '' || this.value === ' ') {
       clearResults();
     } else {
-      let url = constructUrl(this.value);
-      fetch(url)
-      .then(result => result.json())
-      .then((data) => {
-        makeResults(data.results);
-      });
+      if (currentQuery !== this.value) {
+        clearResults();
+        currentQuery = this.value;
+        getData();
+      }
     }
+  }
+
+  function getData() {
+    console.log('hi');
+    let url = constructUrl();
+    fetch(url)
+    .then(result => result.json())
+    .then((data) => {
+      total = data.total;
+      makeResults(data.results);
+    });
   }
 
   function debounce(func, wait, immediate) {
@@ -121,18 +137,31 @@
   }
 
   function makeResults(names) {
-    clearResults();
+    if (!scrolling) {
+      results.innerHTML = '';
+    }
     names.forEach((company) => {
       makeResult(company);
     })
+    resultsOnScreen = true;
   }
 
   function clearResults() {
     results.innerHTML = '';
+    resultsOnScreen = false;
+    currentQuery = '';
+    currentStart = 0;
+    currentLimit = 20;
+    scrolling = false;
+    total = 0;
   }
 
   function clearModal() {
     modal.innerHTML = '';
+  }
+
+  function reachedBottom() {
+    return (window.innerHeight + window.scrollY) >= document.body.offsetHeight ? true: false;
   }
 
   const searchInput = document.querySelector('.search');
@@ -140,7 +169,14 @@
   const modal = document.querySelector('.modal');
 
   // add event listeners
-  searchInput.addEventListener('change', debounce(getData, 1000));
-  searchInput.addEventListener('keyup', debounce(getData, 1000));
-
+  searchInput.addEventListener('change', debounce(setQuery, 1000));
+  searchInput.addEventListener('keyup', debounce(setQuery, 1000));
+  document.addEventListener('scroll', debounce(function() {
+    if (reachedBottom() && resultsOnScreen) {
+      currentStart = Math.min(currentStart + (total - currentStart), currentStart + currentLimit) ;
+      scrolling = true;
+      console.log('start', currentStart);
+      getData();
+    }
+  }, 1000));
 })()
