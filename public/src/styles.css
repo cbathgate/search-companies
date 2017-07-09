@@ -3,6 +3,10 @@
   font-family: 'Roboto', sans-serif;
 }
 
+/********************************/
+/************ Search ************/
+/********************************/
+
 .search-form {
   margin: 100px auto;
   max-width: 400px;
@@ -13,7 +17,7 @@ input.search {
   font-size: 40px;
   left: -25%;
   margin: 0;
-  padding: 5px 0;
+  padding: 10px 0;
   position: relative;
   text-align: center;
   width: 150%;
@@ -44,27 +48,11 @@ input.search {
   background-color: #F1C232;
 }
 
-// modal
+/*******************************/
+/************ Modal ************/
+/*******************************/
 
-.modal {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-}
-
-.modal-main {
-  background-color: white;
-  font-size: 14px;
-  height: 400px;
-  left: 50%;
-  margin: auto;
-  position: fixed;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px;
-  z-index: 9999;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-}
+/* Darkened background for light-box effect */
 
 .modal-background {
   background: rgba(0, 0, 0, 0.73);
@@ -73,14 +61,86 @@ input.search {
   position: fixed;
   top: 0;
   width: 100%;
-  z-index: 9998;
+  z-index: 9997;
 }
 
-.modal-button {
+/* Main Modal Container */
+
+.modal-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+
   background-color: white;
-  border: 1px grey solid;
-  padding: 10px;
+  font-size: 12px;
+  height: 400px;
+  left: 50%;
+  margin: auto;
+  position: fixed;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  z-index: 9998;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
+
+/* Modal Image Container */
+
+.modal-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30%;
+  margin: 0 5% 0 0;
+}
+
+img {
+  width: 100%;
+}
+
+/* Modal Info Container */
+
+.modal-info {
+  display: flex;
+  flex-direction: column;
   width: 50%;
+}
+
+.modal-info h1 {
+  margin: 0 0 10px 0;
+}
+
+.modal-info h2 {
+  margin: 0 0 5px 0;
+}
+
+.modal-info a {
+  font-size: 1.5em;
+  margin: 0 0 20px 0;
+}
+
+.modal-info li {
+  font-size: 1.25em;
+}
+
+/* Modal Close Button */
+
+.modal-button {
+  background: rgba(255, 255, 255, 0.23);
+  border: 1px grey solid;
+  border-radius: 50px;
+  color: white;
+  font-size: 2.5em;
+  height: 50px;
+  left: 90%;
+  margin: auto;
+  padding: 0;
+  position: fixed;
+  text-align: center;
+  top: 5%;
+  width: 50px;
+  z-index: 9999;
 
   -webkit-transition: background-color 0.5s ease-out;
   -moz-transition: background-color 0.5s ease-out;
@@ -89,6 +149,7 @@ input.search {
 }
 
 .modal-button:hover {
-  background-color: #F1C232;
+  background-color: white;
+  color: black;
 }
 

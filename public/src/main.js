@@ -44,41 +44,79 @@
     return h1
   }
 
+  function appendChildren(node, elements) {
+    elements.forEach((elem) => {
+      node.appendChild(elem);
+    })
+  }
+
+  function createClassContainer(node, className) {
+    let container = document.createElement(node);
+    container.classList.add(className);
+    return container;
+  }
+
   function makeModal(company) {
 
-    console.log(company);
+    let infoElements = [];
+    let boxElements = [];
+    let modalElements = [];
 
-    // modal
-    let box = document.createElement('div');
-    box.classList.add('modal-main');
+    // box ---> modalElements
+    let box = createClassContainer('div', 'modal-main');
+    modalElements.push(box);
 
-    // create darkened background
-    let background = document.createElement('div');
-    background.classList.add('modal-background');
-
-    // company info
-    let name = makeNode(company.name, 'h1');
-    let phone = makeNode(company.phone, 'h1');
-
-    // create close button
-    let close = makeNode('Close', 'div');
+    // close button ---> modalElements
+    let close = makeNode('×', 'div');
     close.addEventListener('click', clearModal);
     close.classList.add('modal-button');
+    modalElements.push(close);
 
-    box.appendChild(name);
-    box.appendChild(phone);
-    box.appendChild(close);
+    // cdarkened background ---> modalElements
+    let background = createClassContainer('div', 'modal-background');
+    modalElements.push(background);
+    
+    // image container ---> boxElements
+    let imageContainer = createClassContainer('div', 'modal-image');
+    boxElements.push(imageContainer);
 
-    modal.appendChild(box);
-    modal.appendChild(background);
+    // create image node, append to image container
+    let image = document.createElement('img');
+    image.src = company.avatarUrl;
+    image.alt = `${company.name} logo`;
+    imageContainer.appendChild(image);
+
+    // modal info ---> boxElements
+    let infoContainer = createClassContainer('div', 'modal-info');
+    boxElements.push(infoContainer);
+
+    // company info ---> infoElements
+    infoElements.push(makeNode(company.name, 'h1'));
+    infoElements.push(makeNode(company.phone, 'h2'));
+    let url = makeNode(company.website, 'a');
+    url.href = company.website;
+    infoElements.push(url);
+
+    // labor list ---> infoElements
+    infoElements.push(makeNode('Labor Types:', 'h2'));
+    let laborList = document.createElement('ul');
+    company.laborType.forEach((labor) => {
+      let laborNode = makeNode(labor, 'li');
+      laborList.appendChild(laborNode);
+    })
+    infoElements.push(laborList);
+
+
+    // append children to respective containers
+    appendChildren(infoContainer, infoElements);
+    appendChildren(box, boxElements);  
+    appendChildren(modal, modalElements);
   }
 
   function makeResult(company) {
-    let result = document.createElement('li');
-    let text = document.createTextNode(company.name)
+    let result = makeNode(company.name, 'li');
     result.data = company;
     result.addEventListener('click', function() { makeModal(this.data) });
-    result.appendChild(text);
     results.appendChild(result);
   }
 
