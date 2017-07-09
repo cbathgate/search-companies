@@ -6,7 +6,7 @@
   let resultsOnScreen = false;
   let scrolling = false;
   let currentQuery = null;
-  let total = 0;
+  let total = null;
   let laborPreference = new Set();
   
   // stretch goal: filter by labor
@@ -25,6 +25,7 @@
   function setQuery() {
     if (this.value === '' || this.value === ' ') {
       clearResults();
+      clearQuery();
     } else {
       if (currentQuery !== this.value) {
         clearQuery();
@@ -41,6 +42,7 @@
     .then(result => result.json())
     .then((data) => {
       total = data.total;
+      console.log(total);
       makeResults(data.results);
     });
   }
@@ -169,13 +171,42 @@
   }
 
   function makeResults(names) {
+
     if (!scrolling) {
       results.innerHTML = '';
     }
+
+    if (currentStart > 0) {
+      deleteSpinner();
+    }
+
+    if (total === 0) {
+      let noResults = makeNode('No results found', 'h1');
+      noResults.classList.add('no-result');
+      results.appendChild(noResults);
+      return;
+    }
+
     names.forEach((company) => {
       makeResult(company);
     })
     resultsOnScreen = true;
+  }
+
+  function createSpinner() {
+    let spinner = createClassContainer('div', 'spinner');
+
+    for (let i = 1; i <= 3; i++) {
+      let node = createClassContainer('div', "bounce" + i);
+      spinner.appendChild(node);
+    }
+
+    results.appendChild(spinner);
+  }
+
+  function deleteSpinner() {
+    let spinner = document.querySelector('.spinner');
+    spinner.parentNode.removeChild(spinner);
   }
 
   function clearResults() {
@@ -184,7 +215,7 @@
     currentStart = 0;
     currentLimit = 20;
     scrolling = false;
-    total = 0;
+    total = null;
   }
 
   function clearModal() {
@@ -200,6 +231,7 @@
   const modal = document.querySelector('.modal');
   const checkBoxes = document.querySelectorAll('.check');
   const noneBox = document.querySelector('.none');
+  const spin = document.querySelector('.spin');
 
   // add event listeners
   searchInput.addEventListener('change', debounce(setQuery, 1000));
@@ -210,14 +242,13 @@
     check.addEventListener('change', changeLaborPreference);
   });
 
-  document.addEventListener('scroll', debounce(function() {
-    if (reachedBottom() && resultsOnScreen) {
+  document.addEventListener('scroll',  
+    debounce(function() {
+    if (reachedBottom() && resultsOnScreen && total !== currentStart) {
+      createSpinner();
       currentStart = Math.min(currentStart + (total - currentStart), currentStart + currentLimit) ;
       scrolling = true;
-      console.log('start', currentStart);
-      getData();
+      setTimeout(getData, 1000);
     }
   }, 1000));
-
-
 })()
