@@ -1,20 +1,33 @@
 (function() {
 
   const baseEndpoint = 'http://localhost:3000/api/companies';
+
+  // currentStart will update as user scrolls page
   let currentStart = 0;
+  // amount of results per query
   let currentLimit = 20;
+  // additional queries will not appear with scroll unless results already on screen
   let resultsOnScreen = false;
+  // set to true after first scroll to bottom, resets when new query is set
   let scrolling = false;
+  // if current query is the same as the entered value, results will not clear on screen
   let currentQuery = null;
+  // keep track of results total, know when to stop queries to api
   let total = null;
+  // keeps track of what's checked
   let laborPreference = new Set();
+
+  /******************************/
+  /******* API FUNCTIONS ********/
+  /******************************/
   
-  // stretch goal: filter by labor
+  // construct url based on whether user has preferences on labor, returns url
   function constructUrl() {
     if (laborPreference.size) {
-      let labor=([...laborPreference]).join(',');
+      let labor = ([...laborPreference]).join(',');
       return `${baseEndpoint}?q=${currentQuery}&start=${currentStart}&limit=${currentLimit}&laborTypes=${labor}`;
     }
+    // when no preferences (none box is checked)
     return `${baseEndpoint}?q=${currentQuery}&start=${currentStart}&limit=${currentLimit}`;
   }
 
@@ -24,12 +37,13 @@
 
   function setQuery() {
     if (this.value === '' || this.value === ' ') {
-      clearResults();
+      reset();
       clearQuery();
     } else {
+      // if entered value is the same as current query, results don't change on screen
       if (currentQuery !== this.value) {
         clearQuery();
-        clearResults();
+        reset();
         currentQuery = this.value;
         getData();
       }
@@ -42,56 +56,52 @@
     .then(result => result.json())
     .then((data) => {
       total = data.total;
-      console.log(total);
       makeResults(data.results);
     });
   }
 
+  /******************************/
+  /******* LABOR FILTERS ********/
+  /******************************/
+
+  // handles checking/unchecking new labor preference
   function changeLaborPreference() {
-    if (this.checked) {  
-      laborPreference.add(this.value);
-    } else {
-      laborPreference.delete(this.value);
-    }
-    console.log(laborPreference);
+    this.checked ? laborPreference.add(this.value): laborPreference.delete(this.value);
     laborPreference.size ? noneBox.checked = false: noneBox.checked = true;
-    clearResults();
+    reset();
     if (currentQuery !== null) {
       getData();
     }
   }
 
+  // all other labor options are unchecked when none is checked
   function unCheckOtherBoxes() {
     checkBoxes.forEach((check) => {
       check.checked = false;
     })
     laborPreference = new Set();
-    clearResults();
+    reset();
     if (currentQuery !== null) {
       getData();
     }
   }
 
-  function debounce(func, wait, immediate) {
-    var timeout;
-    return function() {
-      var context = this, args = arguments;
-      var later = function() {
-        timeout = null;
-        if (!immediate) func.apply(context, args);
-      };
-      var callNow = immediate && !timeout;
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-      if (callNow) func.apply(context, args);
-    };
-  };
+  /******************************************/
+  /******* CREATE AND EDIT DOM NODES ********/
+  /******************************************/
 
   function makeNode(text, node) {
     let h1 = document.createElement(node);
     let innerText = document.createTextNode(text);
     h1.appendChild(innerText);
     return h1
+  }
+
+  function makeImageNode(src, alt) {
+    let image = document.createElement('img');
+    image.src = src;
+    image.alt = alt;
+    return image;
   }
 
   function appendChildren(node, elements) {
@@ -106,8 +116,13 @@
     return container;
   }
 
+  /**********************/
+  /******* MODAL ********/
+  /**********************/
+
   function makeModal(company) {
 
+    // child node storage
     let infoElements = [];
     let boxElements = [];
     let modalElements = [];
@@ -122,7 +137,7 @@
     close.classList.add('modal-button');
     modalElements.push(close);
 
-    // cdarkened background ---> modalElements
+    // darkened background ---> modalElements
     let background = createClassContainer('div', 'modal-background');
     modalElements.push(background);
     
@@ -131,9 +146,7 @@
     boxElements.push(imageContainer);
 
     // create image node, append to image container
-    let image = document.createElement('img');
-    image.src = company.avatarUrl;
-    image.alt = `${company.name} logo`;
+    let image = makeImageNode(company.avatarUrl, `${company.name} logo`);
     imageContainer.appendChild(image);
 
     // modal info ---> boxElements
@@ -163,6 +176,11 @@
     appendChildren(modal, modalElements);
   }
 
+  /************************/
+  /******* RESULTS ********/
+  /************************/
+
+  // individual result
   function makeResult(company) {
     let result = makeNode(company.name, 'li');
     result.data = company;
@@ -170,16 +188,19 @@
     results.appendChild(result);
   }
 
+  // append all results from data to DOM
   function makeResults(names) {
 
     if (!scrolling) {
       results.innerHTML = '';
     }
 
+    // no spinner needed for first set of results
     if (currentStart > 0) {
       deleteSpinner();
     }
 
+    // no results for a given search
     if (total === 0) {
       let noResults = makeNode('No results found', 'h1');
       noResults.classList.add('no-result');
@@ -193,6 +214,11 @@
     resultsOnScreen = true;
   }
 
+  /************************/
+  /******* SPINNER ********/
+  /************************/
+
+  // add spinkit spinner
   function createSpinner() {
     let spinner = createClassContainer('div', 'spinner');
 
@@ -209,7 +235,11 @@
     spinner.parentNode.removeChild(spinner);
   }
 
-  function clearResults() {
+  /***********************/
+  /******* RESETS ********/
+  /***********************/
+
+  function reset() {
     results.innerHTML = '';
     resultsOnScreen = false;
     currentStart = 0;
@@ -222,6 +252,11 @@
     modal.innerHTML = '';
   }
 
+  /************************************/
+  /******* ADD EVENT LISTENERS ********/
+  /************************************/
+
+  // detects scroll to bottom of page
   function reachedBottom() {
     return (window.innerHeight + window.scrollY) >= document.body.offsetHeight ? true: false;
   }
@@ -231,20 +266,36 @@
   const modal = document.querySelector('.modal');
   const checkBoxes = document.querySelectorAll('.check');
   const noneBox = document.querySelector('.none');
-  const spin = document.querySelector('.spin');
+
+  // ensures a method runs only every x milliseconds, dictacted by wait
+  function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) func.apply(context, args);
+    };
+  };
 
   // add event listeners
   searchInput.addEventListener('change', debounce(setQuery, 1000));
   searchInput.addEventListener('keyup', debounce(setQuery, 1000));
   noneBox.addEventListener('change', unCheckOtherBoxes);
-
   checkBoxes.forEach((check) => {
     check.addEventListener('change', changeLaborPreference);
   });
 
+  // only calls getData if user reached the bottom of page and more results to load
   document.addEventListener('scroll',  
     debounce(function() {
     if (reachedBottom() && resultsOnScreen && total !== currentStart) {
+      // spinner so user knows data is loading
       createSpinner();
       currentStart = Math.min(currentStart + (total - currentStart), currentStart + currentLimit) ;
       scrolling = true;
